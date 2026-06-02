@@ -7,7 +7,7 @@ Collection of Violentmonkey userscripts for various sites, plus a standalone cus
 ```
 site-name/
   script-name.user.js
-index.html          ← standalone RadioKing player (GitHub Pages)
+radioking/index.html ← standalone RadioKing player (GitHub Pages)
 ```
 
 ## Scripts
@@ -16,7 +16,7 @@ index.html          ← standalone RadioKing player (GitHub Pages)
 
 ## Standalone Player
 
-[`index.html`](index.html) is a self-contained custom RadioKing player that works without any userscript or browser extension. Host it on GitHub Pages and pass the station slug as a URL parameter.
+[`radioking/index.html`](radioking/index.html) is a self-contained custom RadioKing player that works without any userscript or browser extension. Host it on GitHub Pages and pass the station slug as a URL parameter.
 
 ### Usage
 

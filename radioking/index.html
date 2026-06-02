@@ -32,36 +32,16 @@ html,body{height:100%;overflow:hidden;background:#1a0f00;font-family:-apple-syst
 #progress-fill{height:100%;width:0%;border-radius:2px;background:rgba(255,255,255,0.65);transition:width 1s linear}
 #time-row{display:flex;justify-content:space-between;font-size:11px;opacity:.45;margin-top:3px;font-variant-numeric:tabular-nums}
 
-/* ---- up next ---- */
-#up-next{width:100%;text-align:right;font-size:12px;color:rgba(255,255,255,0.85);padding-top:6px;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ---- up next + tooltip ---- */
+#up-next-wrap{width:100%;position:relative}
+#up-next{width:100%;text-align:right;font-size:12px;color:rgba(255,255,255,0.85);padding-top:6px;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default}
 #up-next .up-label{opacity:.55}
 #up-next .up-artist{opacity:.65}
 #up-next .up-anim{display:inline-block;animation:upSlide .6s cubic-bezier(.16,1,.3,1)}
 @keyframes upSlide{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
 
-/* ---- controls ---- */
-#controls{display:flex;align-items:center;gap:16px;margin-top:4px;width:100%}
-#play-btn{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.18);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;flex-shrink:0}
-#play-btn:hover{background:rgba(255,255,255,0.3)}
-#play-btn svg{fill:#fff;width:24px;height:24px;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3))}
-#play-btn .pause-icon{display:none}
-#play-btn.playing .play-icon{display:none}
-#play-btn.playing .pause-icon{display:block}
-
-/* ---- station selector ---- */
-#station-select{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:rgba(255,255,255,0.8);padding:8px 12px;font-size:13px;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.4)'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:10px}
-#station-select option{background:#1a1020;color:#fff}
-#volume-wrap{display:flex;align-items:center;gap:6px;flex-shrink:0}
-#volume-wrap svg{width:16px;height:16px;fill:rgba(255,255,255,0.4)}
-#volume-slider{width:60px;height:4px;border-radius:2px;background:rgba(255,255,255,0.1);appearance:none;-webkit-appearance:none;outline:none;cursor:pointer}
-#volume-slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff;cursor:pointer}
-#volume-slider::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#fff;cursor:pointer;border:none}
-
-/* ---- history tooltip ---- */
-#history-backdrop{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.35);z-index:199;opacity:0;pointer-events:none;transition:opacity .25s}
-#history-backdrop.visible{opacity:1;pointer-events:auto}
-#history-tooltip{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.95);background:rgba(10,10,20,0.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:12px;padding:16px 20px;min-width:280px;max-width:360px;max-height:200px;overflow-y:auto;box-shadow:0 12px 48px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.08);font-size:13px;color:rgba(255,255,255,0.9);line-height:1.5;z-index:200;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
-#history-tooltip.visible{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+#history-tooltip{position:absolute;bottom:100%;right:0;margin-bottom:6px;background:rgba(10,10,20,0.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:10px;padding:10px 14px;min-width:240px;max-width:320px;max-height:200px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.06);font-size:12px;color:rgba(255,255,255,0.85);line-height:1.5;opacity:0;pointer-events:none;transform:translateY(4px);transition:opacity .2s,transform .2s;z-index:50}
+#up-next-wrap:hover #history-tooltip{opacity:1;pointer-events:auto;transform:translateY(0)}
 #history-tooltip .tt-header{font-size:10px;text-transform:uppercase;letter-spacing:1px;opacity:.35;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.06)}
 #history-tooltip .tt-item{display:flex;gap:6px;padding:2px 0;opacity:.7;transition:opacity .15s}
 #history-tooltip .tt-item:hover{opacity:1}
@@ -72,7 +52,28 @@ html,body{height:100%;overflow:hidden;background:#1a0f00;font-family:-apple-syst
 #history-tooltip::-webkit-scrollbar-track{background:transparent}
 #history-tooltip::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
 
-/* ---- loading / error / landing ---- */
+/* ---- controls ---- */
+#controls{display:flex;align-items:center;gap:16px;margin-top:4px;width:100%}
+#play-btn{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.18);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;flex-shrink:0}
+#play-btn:hover{background:rgba(255,255,255,0.3)}
+#play-btn svg{fill:#fff;width:24px;height:24px;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3))}
+#play-btn .pause-icon{display:none}
+#play-btn.playing .play-icon{display:none}
+#play-btn.playing .pause-icon{display:block}
+
+/* ---- station select ---- */
+.select-wrap{position:relative;flex:1}
+.select-wrap::after{content:'';position:absolute;right:12px;top:50%;transform:translateY(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid rgba(255,255,255,0.4);pointer-events:none}
+#station-select{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:rgba(255,255,255,0.85);padding:8px 30px 8px 12px;font-size:13px;cursor:pointer;outline:none;-webkit-appearance:none;-moz-appearance:none;appearance:none;transition:border-color .2s}
+#station-select:hover{border-color:rgba(255,255,255,0.15)}
+#station-select option{background:#1a1020;color:#fff}
+#volume-wrap{display:flex;align-items:center;gap:6px;flex-shrink:0}
+#volume-wrap svg{width:16px;height:16px;fill:rgba(255,255,255,0.4);flex-shrink:0}
+#volume-slider{width:60px;height:4px;border-radius:2px;background:rgba(255,255,255,0.1);-webkit-appearance:none;-moz-appearance:none;appearance:none;outline:none;cursor:pointer}
+#volume-slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff;cursor:pointer}
+#volume-slider::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#fff;cursor:pointer;border:none}
+
+/* ---- landing ---- */
 #landing{position:fixed;top:0;left:0;right:0;bottom:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#2d1b00,#1a0f00,#3d2b1f);padding:40px;text-align:center}
 #landing h1{font-size:28px;font-weight:800;margin-bottom:8px;letter-spacing:-.5px}
 #landing p{opacity:.6;margin-bottom:20px;line-height:1.5;max-width:400px}
@@ -115,13 +116,18 @@ html,body{height:100%;overflow:hidden;background:#1a0f00;font-family:-apple-syst
     <div id="progress-bar"><div id="progress-fill"></div></div>
     <div id="time-row"><span id="time-elapsed">--:--</span><span id="time-total">--:--</span></div>
   </div>
-  <div id="up-next"></div>
+  <div id="up-next-wrap">
+    <div id="up-next"></div>
+    <div id="history-tooltip"></div>
+  </div>
   <div id="controls">
     <button id="play-btn">
       <svg class="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
       <svg class="pause-icon" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
     </button>
-    <select id="station-select"></select>
+    <div class="select-wrap">
+      <select id="station-select"></select>
+    </div>
     <div id="volume-wrap">
       <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 8.5v7a4.5 4.5 0 002.5-3.5zm4.5 0A9 9 0 0017 3.5v2.5A6.5 6.5 0 0119.5 12 6.5 6.5 0 0117 16v2.5A9 9 0 0021 12z"/></svg>
       <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.8">
@@ -130,10 +136,7 @@ html,body{height:100%;overflow:hidden;background:#1a0f00;font-family:-apple-syst
 </div>
 </div>
 
-<div id="history-backdrop"></div>
-<div id="history-tooltip"></div>
-
-<!-- landing page when no params -->
+<!-- landing -->
 <div id="landing">
   <h1>Radioking Player</h1>
   <p>A custom player for your favorite RadioKing stations.</p>
@@ -157,7 +160,7 @@ const slugParam = params.get('slug');
 const streamParam = params.get('stream');
 
 if (!slugParam && !streamParam) {
-  /* landing page — do nothing */
+  /* landing */
 } else {
   startApp(slugParam, streamParam);
 }
@@ -175,12 +178,10 @@ function startApp(slug, streamUrl) {
   const timeElapsed = document.getElementById('time-elapsed');
   const timeTotal = document.getElementById('time-total');
   const upNextEl = document.getElementById('up-next');
+  const tooltipEl = document.getElementById('history-tooltip');
   const bgEl = document.getElementById('bg');
   const canvas = document.getElementById('kawarp-canvas');
   const volumeSlider = document.getElementById('volume-slider');
-  const backdropEl = document.getElementById('history-backdrop');
-  const tooltipEl = document.getElementById('history-tooltip');
-  const FALLBACK_BG = 'linear-gradient(135deg,#2d1b00,#1a0f00,#3d2b1f)';
 
   let kawarp = null;
   let startedAt = null;
@@ -192,7 +193,19 @@ function startApp(slug, streamUrl) {
   let currentAlbum = '';
   let lastNextKey = '';
   let lastNextTs = 0;
-  let tooltipTimer = null;
+
+  /* ---- canvas resize ---- */
+  function resizeCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      if (kawarp) kawarp.resize();
+    }
+  }
+  window.addEventListener('resize', resizeCanvas);
 
   /* ---- station select ---- */
   STATIONS.forEach(s => {
@@ -207,20 +220,12 @@ function startApp(slug, streamUrl) {
   });
 
   /* ---- audio ---- */
-  function resolveStream(s) {
-    return streamUrl || `https://play.radioking.io/${s}`;
-  }
-  audio.src = resolveStream(slug);
+  audio.src = streamUrl || `https://play.radioking.io/${slug}`;
   audio.volume = parseFloat(volumeSlider.value);
 
   playBtn.addEventListener('click', () => {
-    if (audio.paused) {
-      audio.play().catch(() => {});
-      playBtn.classList.add('playing');
-    } else {
-      audio.pause();
-      playBtn.classList.remove('playing');
-    }
+    if (audio.paused) { audio.play().catch(() => {}); playBtn.classList.add('playing'); }
+    else { audio.pause(); playBtn.classList.remove('playing'); }
   });
   audio.addEventListener('play', () => playBtn.classList.add('playing'));
   audio.addEventListener('pause', () => playBtn.classList.remove('playing'));
@@ -236,8 +241,9 @@ function startApp(slug, streamUrl) {
         transitionDuration: 2000, saturation: 1.4,
         tintColor: [0.12, 0.06, 0.0], tintIntensity: 0.15,
       });
+      resizeCanvas();
       kawarp.start();
-    } catch (_) {}
+    } catch (_) { console.warn('kawarp init failed', _); }
   }
   initKawarp();
 
@@ -252,19 +258,12 @@ function startApp(slug, streamUrl) {
     const m = {'\x80':"'",'\x82':"'",'\x83':'f','\x84':'"','\x85':'...','\x86':'+','\x87':'+','\x88':'^','\x89':'%','\x8A':'S','\x8B':'<','\x8C':'OE','\x8E':'Z','\x91':"'",'\x92':"'",'\x93':'"','\x94':'"','\x95':'*','\x96':'-','\x97':'-','\x98':'~','\x99':"'",'\x9A':'s','\x9B':'>','\x9C':'oe','\x9E':'z','\x9F':'Y'};
     return s.replace(/[\x80-\x9F]/g, c => m[c] || '');
   }
-
   function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  function fmt(sec) { const m = Math.floor(sec / 60); const s = Math.floor(sec % 60); return `${m}:${String(s).padStart(2, '0')}`; }
 
-  function fmt(sec) {
-    const m = Math.floor(sec / 60);
-    const s = Math.floor(sec % 60);
-    return `${m}:${String(s).padStart(2, '0')}`;
-  }
-
-  /* ---- API base ---- */
   const API = `https://api.radioking.io/widget/radio/${slug}`;
 
-  /* ---- poll current track ---- */
+  /* ---- poll current ---- */
   async function pollApi() {
     try {
       const r = await fetch(`${API}/track/current?_=${Date.now()}`, { credentials: 'omit' });
@@ -277,7 +276,6 @@ function startApp(slug, streamUrl) {
         trackDuration = d.duration || 0;
         return;
       }
-
       if (Date.now() - lastChangeTs < 5000) return;
 
       lastTrackId = d.id;
@@ -296,10 +294,7 @@ function startApp(slug, streamUrl) {
         if (currentAlbum) txt += ` <span class="rk-album">· ${esc(currentAlbum)}</span>`;
         artistEl.innerHTML = txt;
       }
-      if (coverEl && d.cover) {
-        coverEl.src = d.cover;
-        setBackground(d.cover);
-      }
+      if (coverEl && d.cover) { coverEl.src = d.cover; setBackground(d.cover); }
     } catch (_) {}
   }
 
@@ -313,7 +308,7 @@ function startApp(slug, streamUrl) {
   }
   setTimeout(() => { pollApi(); scheduleNext(); }, 500);
 
-  /* ---- progress bar ---- */
+  /* ---- progress ---- */
   function updateProgress() {
     if (!startedAt || !trackDuration) {
       progressFill.style.width = '0%';
@@ -323,8 +318,7 @@ function startApp(slug, streamUrl) {
     }
     const elapsed = Math.max(0, (Date.now() - new Date(startedAt).getTime()) / 1000 - 10);
     const clamped = Math.min(elapsed, trackDuration);
-    const pct = trackDuration > 0 ? (clamped / trackDuration * 100) : 0;
-    progressFill.style.width = `${pct}%`;
+    progressFill.style.width = `${trackDuration > 0 ? (clamped / trackDuration * 100) : 0}%`;
     timeElapsed.textContent = fmt(clamped);
     timeTotal.textContent = fmt(trackDuration);
   }
@@ -345,7 +339,7 @@ function startApp(slug, streamUrl) {
       const now = Date.now();
       const anim = (key !== lastNextKey && now - lastNextTs > 500);
       if (anim) { lastNextKey = key; lastNextTs = now; }
-      const html = `<span class="up-icon">♪</span> <span class="up-label">Up Next</span> <span style="opacity:.3;margin:0 4px;">·</span> <span>${esc(nTitle)}</span> <span style="opacity:.3;margin:0 4px;">·</span> <span class="up-artist">${esc(nArtist)}</span>`;
+      const html = `♪ <span class="up-label">Up Next</span> <span style="opacity:.3;margin:0 4px;">·</span> ${esc(nTitle)} <span style="opacity:.3;margin:0 4px;">·</span> <span class="up-artist">${esc(nArtist)}</span>`;
       upNextEl.innerHTML = anim ? `<span class="up-anim">${html}</span>` : `<span>${html}</span>`;
     } catch (_) { upNextEl.style.display = 'none'; }
   }
@@ -364,7 +358,6 @@ function startApp(slug, streamUrl) {
     }
     tooltipEl.innerHTML = parts.join('');
   }
-
   async function pollHistory() {
     try {
       const r = await fetch(`${API}/track/history?_=${Date.now()}`, { credentials: 'omit' });
@@ -374,16 +367,6 @@ function startApp(slug, streamUrl) {
   }
   setTimeout(pollHistory, 2000);
   setInterval(pollHistory, 30000);
-
-  /* ---- tooltip hover ---- */
-  const upNextWrap = upNextEl;
-  function showTooltip() { clearTimeout(tooltipTimer); backdropEl.classList.add('visible'); tooltipEl.classList.add('visible'); }
-  function hideTooltip() { tooltipTimer = setTimeout(() => { backdropEl.classList.remove('visible'); tooltipEl.classList.remove('visible'); }, 200); }
-  upNextWrap.addEventListener('mouseenter', showTooltip);
-  upNextWrap.addEventListener('mouseleave', hideTooltip);
-  tooltipEl.addEventListener('mouseenter', showTooltip);
-  tooltipEl.addEventListener('mouseleave', hideTooltip);
-  backdropEl.addEventListener('click', hideTooltip);
 }
 </script>
 </body>
