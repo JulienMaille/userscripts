@@ -129,11 +129,13 @@ html,body{height:100%;overflow:hidden;background:#1a0f00;font-family:-apple-syst
     </button>
   </div>
 
-  <div id="cover-wrap"><img id="cover" src="" alt="cover"></div>
+  <div id="cover-wrap" style="background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.08)); display: flex; align-items: center; justify-content: center;">
+    <img id="cover" src="" alt="cover">
+  </div>
 
-  <div id="track-info">
-    <div id="title"></div>
-    <div id="artist"></div>
+  <div id="track-info" style="min-height: 58px;">
+    <div id="title">Connecting…</div>
+    <div id="artist">Tune in to the stream</div>
   </div>
 
   <div id="progress-wrap">
@@ -141,7 +143,7 @@ html,body{height:100%;overflow:hidden;background:#1a0f00;font-family:-apple-syst
     <div id="time-row"><span id="time-elapsed">--:--</span><span id="time-total">--:--</span></div>
   </div>
 
-  <div id="up-next"></div>
+  <div id="up-next" style="min-height: 24px;">Waiting for playlist…</div>
 
   <div id="history-wrap">
     <div id="history-list"></div>
