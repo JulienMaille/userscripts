@@ -29,8 +29,8 @@ radioking/index.html ← standalone RadioKing player (GitHub Pages)
 
 | Name | Slug | Link |
 |---|---|---|
-| Radio Choco | `radiochoco-sound` | [→ Listen](?slug=radiochoco-sound) |
-| Le Mellotron | `lemellotron-stream` | [→ Listen](?slug=lemellotron-stream) |
+| Radio Choco | `radiochoco-sound` | [→ Listen](radioking/index.html?slug=radiochoco-sound) |
+| Le Mellotron | `lemellotron-stream` | [→ Listen](radioking/index.html?slug=lemellotron-stream) |
 
 ### Deploy
 

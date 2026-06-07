@@ -33,7 +33,7 @@ html,body{height:100%;overflow:hidden;background:#1a0f00;font-family:-apple-syst
 
 /* ---- cover ---- */
 #cover-wrap{position:relative;width:220px;height:220px;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.5);flex-shrink:0;transition:width .3s,height .3s}
-#cover{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .4s ease}
+#cover{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .4s ease;opacity:0}
 
 /* ---- track info ---- */
 #track-info{width:100%;text-align:center}
@@ -44,7 +44,7 @@ html,body{height:100%;overflow:hidden;background:#1a0f00;font-family:-apple-syst
 /* ---- progress ---- */
 #progress-wrap{width:100%;margin-top:2px}
 #progress-bar{height:4px;border-radius:2px;background:var(--prog-bg);overflow:hidden;transition:background .3s}
-#progress-fill{height:100%;width:0%;border-radius:2px;background:var(--prog-fill);transition:width 1s linear}
+#progress-fill{height:100%;width:0%;border-radius:2px;background:var(--prog-fill);transition:none}
 #time-row{display:flex;justify-content:space-between;font-size:11px;margin-top:3px;font-variant-numeric:tabular-nums;color:var(--text-dimmer);transition:color .3s}
 
 /* ---- up next ---- */
@@ -177,12 +177,6 @@ html,body{height:100%;overflow:hidden;background:#1a0f00;font-family:-apple-syst
 
 <script type="module">
 let DELTASEC = 4;
-const DELTA_SAMPLES = [];
-function calibrateDelta() {
-  if (DELTA_SAMPLES.length < 2) return;
-  const sorted = [...DELTA_SAMPLES].sort((a, b) => a - b);
-  DELTASEC = Math.max(0, Math.round(sorted[0]));
-}
 const STATIONS = [
   { label: 'Radio Choco', slug: 'radiochoco-sound' },
   { label: 'Le Mellotron', slug: 'lemellotron-stream' },
@@ -234,6 +228,7 @@ function startApp(slug, streamUrl) {
   let lastNextTs = 0;
   let isDark = true;
   let coverFadeTimer = null;
+  let visualUpdateTimer = null;
 
   /* ---- canvas resize ---- */
   function resizeCanvas() {
@@ -284,6 +279,8 @@ function startApp(slug, streamUrl) {
   if (savedVol !== null) { audio.volume = parseFloat(savedVol); volumeSlider.value = savedVol; }
   const savedTheme = localStorage.getItem('radioking-theme');
   if (savedTheme === 'light') { isDark = false; document.documentElement.classList.toggle('light', !isDark); }
+  const savedDelta = localStorage.getItem(`radioking-delta-${slug}`);
+  if (savedDelta !== null) { DELTASEC = Math.max(0, parseInt(savedDelta, 10)); }
   /* ---- end restore ---- */
   let userPlaying = false;
 
@@ -381,71 +378,130 @@ function startApp(slug, streamUrl) {
       if (!r.ok) return;
       const d = await r.json();
       if (!d || !d.id) return;
-      if (d.id === lastTrackId) return;
-      if (Date.now() - lastChangeTs < 5000) return;
-      /* ---- calibrate delta from previous track ---- */
-      if (prevStartedAt && prevDuration) {
+      const isSameTrack = (d.id === lastTrackId);
+      const isFirstLoad = (lastTrackId === null);
+      if (!isSameTrack) {
+        if (!isFirstLoad && Date.now() - lastChangeTs < 5000) return;
+        lastTrackId = d.id;
+        lastChangeTs = Date.now();
+      }
+      
+      /* ---- parse started_at ---- */
+      const apiStartedAt = d.started_at ? new Date(d.started_at) : null;
+
+      /* ---- calibrate delta from previous track transition ---- */
+      if (!isSameTrack && prevStartedAt && prevDuration && apiStartedAt) {
         const predictedEnd = prevStartedAt.getTime() + prevDuration * 1000;
         const observedDelay = (Date.now() - predictedEnd) / 1000;
+        console.log('[Delta Calibration]', {
+          prevStartedAt: prevStartedAt.toISOString(),
+          prevDuration,
+          predictedEnd: new Date(predictedEnd).toISOString(),
+          observedAt: new Date().toISOString(),
+          observedDelaySeconds: observedDelay,
+          currentDeltaSec: DELTASEC
+        });
         if (observedDelay >= 0 && observedDelay < 60) {
-          DELTA_SAMPLES.push(observedDelay);
-          if (DELTA_SAMPLES.length > 20) DELTA_SAMPLES.shift();
-          calibrateDelta();
+          DELTASEC = Math.max(0, Math.round(observedDelay));
+          localStorage.setItem(`radioking-delta-${slug}`, DELTASEC);
+          console.log('[Delta Calibrated New Value]', DELTASEC);
         }
       }
-      prevStartedAt = startedAt = d.started_at;
-      prevDuration = trackDuration = d.duration || 0;
-      currentTitle = fixEnc(d.title || '');
-      currentArtist = fixEnc(d.artist || '');
-      currentAlbum = fixEnc(d.album || '');
-      document.title = currentTitle && currentArtist ? `${currentArtist} - ${currentTitle}` : (currentTitle || currentArtist || 'Radioking Player');
-      if (titleEl) titleEl.textContent = currentTitle;
-      if (artistEl) {
-        let txt = esc(currentArtist);
-        if (currentAlbum) txt += ` <span class="rk-album">· ${esc(currentAlbum)}</span>`;
-        artistEl.innerHTML = txt;
+
+      /* ---- update timings ---- */
+      if (apiStartedAt) {
+        prevStartedAt = apiStartedAt;
       }
-      if (coverEl && d.cover) {
-        if (d.cover !== coverEl.src) {
-          coverEl.style.opacity = '0';
-          clearTimeout(coverFadeTimer);
-          coverFadeTimer = setTimeout(() => {
+      prevDuration = d.duration || 0;
+
+      if (isSameTrack) return;
+
+      const applyVisuals = () => {
+        if (apiStartedAt) {
+          startedAt = apiStartedAt;
+        }
+        trackDuration = d.duration || 0;
+        currentTitle = fixEnc(d.title || '');
+        currentArtist = fixEnc(d.artist || '');
+        currentAlbum = fixEnc(d.album || '');
+        document.title = currentTitle && currentArtist ? `${currentArtist} - ${currentTitle}` : (currentTitle || currentArtist || 'Radioking Player');
+        if (titleEl) titleEl.textContent = currentTitle;
+        if (artistEl) {
+          let txt = esc(currentArtist);
+          if (currentAlbum) txt += ` <span class="rk-album">· ${esc(currentAlbum)}</span>`;
+          artistEl.innerHTML = txt;
+        }
+        if (coverEl && d.cover) {
+          if (!coverEl.src || coverEl.getAttribute('src') === '') {
             coverEl.src = d.cover;
             coverEl.style.opacity = '1';
-          }, 200);
+          } else if (d.cover !== coverEl.src) {
+            coverEl.style.opacity = '0';
+            clearTimeout(coverFadeTimer);
+            coverFadeTimer = setTimeout(() => {
+              coverEl.src = d.cover;
+              coverEl.style.opacity = '1';
+            }, 200);
+          }
+          setBackground(d.cover);
         }
-        setBackground(d.cover);
-      }
-      /* ---- Media Session ---- */
-      if ('mediaSession' in navigator) {
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: currentTitle || stationLabel,
-          artist: currentArtist || stationLabel,
-          album: currentAlbum || stationLabel,
-          artwork: d.cover ? [{ src: d.cover, sizes: '512x512', type: 'image/jpeg' }] : [],
-        });
+        /* ---- Media Session ---- */
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: currentTitle || stationLabel,
+            artist: currentArtist || stationLabel,
+            album: currentAlbum || stationLabel,
+            artwork: d.cover ? [{ src: d.cover, sizes: '512x512', type: 'image/jpeg' }] : [],
+          });
+        }
+      };
+
+      clearTimeout(visualUpdateTimer);
+      if (isFirstLoad) {
+        applyVisuals();
+      } else {
+        visualUpdateTimer = setTimeout(applyVisuals, DELTASEC * 1000);
       }
     } catch (_) {}
   }
 
   function scheduleNext() {
     let delay = 8000;
-    if (startedAt && trackDuration) {
-      const elapsed = (Date.now() - new Date(startedAt).getTime()) / 1000 - DELTASEC;
-      if (elapsed >= trackDuration * 0.95) delay = 1000;
+    if (prevStartedAt && prevDuration) {
+      const elapsed = (Date.now() - new Date(prevStartedAt).getTime()) / 1000 - DELTASEC;
+      if (elapsed >= prevDuration * 0.95) delay = 1000;
     }
     setTimeout(() => { pollApi(); scheduleNext(); }, delay);
   }
   setTimeout(() => { pollApi(); scheduleNext(); }, 500);
 
   /* ---- progress ---- */
+  let lastWidth = 0;
   function updateProgress() {
     if (!startedAt || !trackDuration) {
-      progressFill.style.width = '0%'; timeElapsed.textContent = '--:--'; timeTotal.textContent = '--:--'; return;
+      progressFill.style.transition = 'none';
+      progressFill.style.width = '0%';
+      lastWidth = 0;
+      timeElapsed.textContent = '--:--';
+      timeTotal.textContent = '--:--';
+      return;
     }
-    const elapsed = Math.max(0, (Date.now() - new Date(startedAt).getTime()) / 1000 - DELTASEC);
+    const elapsed = Math.max(0, (Date.now() - new Date(startedAt).getTime()) / 1000);
     const clamped = Math.min(elapsed, trackDuration);
-    progressFill.style.width = `${trackDuration > 0 ? (clamped / trackDuration * 100) : 0}%`;
+    const newWidth = trackDuration > 0 ? (clamped / trackDuration * 100) : 0;
+    
+    // Disable transition if tab is hidden, if resetting, or if the width jump is too large (> 1.5%)
+    const isHidden = document.visibilityState === 'hidden';
+    const widthJump = Math.abs(newWidth - lastWidth);
+    
+    if (isHidden || newWidth === 0 || widthJump > 1.5) {
+      progressFill.style.transition = 'none';
+    } else {
+      progressFill.style.transition = 'width 1s linear';
+    }
+    
+    progressFill.style.width = `${newWidth}%`;
+    lastWidth = newWidth;
     timeElapsed.textContent = fmt(clamped);
     timeTotal.textContent = fmt(trackDuration);
   }
