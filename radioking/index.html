@@ -471,6 +471,8 @@ function startApp(slug, streamUrl) {
             artwork: d.cover ? [{ src: d.cover, sizes: '512x512', type: 'image/jpeg' }] : [],
           });
         }
+        /* ---- refresh history ---- */
+        pollHistory();
       };
 
       clearTimeout(visualUpdateTimer);
@@ -567,7 +569,7 @@ function startApp(slug, streamUrl) {
     } catch (_) {}
   }
   setTimeout(pollHistory, 2000);
-  setInterval(pollHistory, 30000);
+  setInterval(pollHistory, 60000);
 }
 </script>
 </body>
