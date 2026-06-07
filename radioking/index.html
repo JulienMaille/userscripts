@@ -486,7 +486,7 @@ function startApp(slug, streamUrl) {
       timeTotal.textContent = '--:--';
       return;
     }
-    const elapsed = Math.max(0, (Date.now() - new Date(startedAt).getTime()) / 1000);
+    const elapsed = Math.max(0, (Date.now() - new Date(startedAt).getTime()) / 1000 - DELTASEC);
     const clamped = Math.min(elapsed, trackDuration);
     const newWidth = trackDuration > 0 ? (clamped / trackDuration * 100) : 0;
     
