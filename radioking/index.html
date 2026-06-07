@@ -175,7 +175,7 @@ html,body{height:100%;overflow:hidden;background:#1a0f00;font-family:-apple-syst
   </div>
 </div>
 
-<audio id="audio"></audio>
+<audio id="audio" preload="none"></audio>
 
 <script type="module">
 let DELTASEC = 4;
@@ -297,8 +297,21 @@ function startApp(slug, streamUrl) {
     });
   }
 
+  function forceLiveEdge() {
+    try {
+      if (audio.buffered.length > 0) {
+        // Seek to 0.5s before the end of the buffered region (the closest to live edge)
+        audio.currentTime = audio.buffered.end(audio.buffered.length - 1) - 0.5;
+      }
+    } catch(e) {}
+  }
+
   playBtn.addEventListener('click', () => {
-    if (audio.paused) { audio.play().catch(() => {}); playBtn.classList.add('playing'); userPlaying = true; }
+    if (audio.paused) { 
+      audio.play().then(forceLiveEdge).catch(() => {}); 
+      playBtn.classList.add('playing'); 
+      userPlaying = true; 
+    }
     else { audio.pause(); playBtn.classList.remove('playing'); userPlaying = false; }
   });
   audio.addEventListener('play', () => { playBtn.classList.add('playing'); if (kawarp) kawarp.start(); });
@@ -307,13 +320,13 @@ function startApp(slug, streamUrl) {
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && userPlaying && audio.paused) {
-      audio.play().catch(() => {});
+      audio.play().then(forceLiveEdge).catch(() => {});
     }
   });
 
   /* ---- Media Session actions ---- */
   if ('mediaSession' in navigator) {
-    navigator.mediaSession.setActionHandler('play', () => audio.play());
+    navigator.mediaSession.setActionHandler('play', () => audio.play().then(forceLiveEdge));
     navigator.mediaSession.setActionHandler('pause', () => audio.pause());
   }
 
