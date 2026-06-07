@@ -419,9 +419,7 @@ function startApp(slug, streamUrl) {
       if (isSameTrack) return;
 
       const applyVisuals = () => {
-        if (apiStartedAt) {
-          startedAt = apiStartedAt;
-        }
+        startedAt = new Date(Date.now() - DELTASEC * 1000);
         trackDuration = d.duration || 0;
         currentTitle = fixEnc(d.title || '');
         currentArtist = fixEnc(d.artist || '');
