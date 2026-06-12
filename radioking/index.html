@@ -13,7 +13,6 @@ html,body{height:100%;overflow:hidden;background:#1a0f00;font-family:-apple-syst
 
 /* ---- backgrounds ---- */
 #bg{position:fixed;top:-60px;left:-60px;right:-60px;bottom:-60px;background:linear-gradient(135deg,#2d1b00,#1a0f00,#3d2b1f) center/cover no-repeat;filter:var(--bg-filter);z-index:0;transition:background 1s ease,filter .4s}
-#kawarp-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none}
 
 /* ---- player card ---- */
 #player-wrap{position:fixed;top:0;left:0;right:0;bottom:0;z-index:2;display:flex;align-items:center;justify-content:center;padding:20px}
@@ -117,7 +116,6 @@ html,body{height:100%;overflow:hidden;background:#1a0f00;font-family:-apple-syst
 <body>
 
 <div id="bg"></div>
-<canvas id="kawarp-canvas"></canvas>
 
 <div id="player-wrap">
 <div id="player">
@@ -212,12 +210,10 @@ function startApp(slug, streamUrl) {
   const historyList = document.getElementById('history-list');
   const historyToggle = document.getElementById('history-toggle');
   const bgEl = document.getElementById('bg');
-  const canvas = document.getElementById('kawarp-canvas');
   const volumeSlider = document.getElementById('volume-slider');
   const statusDot = document.getElementById('status-dot');
   const themeBtn = document.getElementById('theme-btn');
 
-  let kawarp = null;
   let startedAt = null;
   let trackDuration = 0;
   let lastTrackId = null;
@@ -233,19 +229,6 @@ function startApp(slug, streamUrl) {
   let coverFadeTimer = null;
   let visualUpdateTimer = null;
 
-  /* ---- canvas resize ---- */
-  function resizeCanvas() {
-    const dpr = window.devicePixelRatio || 1;
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-    if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      if (kawarp) kawarp.resize();
-    }
-  }
-  window.addEventListener('resize', resizeCanvas);
-
   /* ---- station pill buttons ---- */
   STATIONS.forEach(s => {
     const btn = document.createElement('button');
@@ -260,13 +243,6 @@ function startApp(slug, streamUrl) {
     isDark = !isDark;
     document.documentElement.classList.toggle('light', !isDark);
     localStorage.setItem('radioking-theme', isDark ? 'dark' : 'light');
-    if (kawarp) {
-      if (isDark) {
-        kawarp.tintColor = [0.0, 0.0, 0.0];
-      } else {
-        kawarp.tintColor = [1.0, 1.0, 1.0];
-      }
-    }
   });
 
   /* ---- history toggle ---- */
@@ -315,8 +291,8 @@ function startApp(slug, streamUrl) {
     }
     else { audio.pause(); playBtn.classList.remove('playing'); userPlaying = false; }
   });
-  audio.addEventListener('play', () => { playBtn.classList.add('playing'); if (kawarp) kawarp.start(); });
-  audio.addEventListener('pause', () => { playBtn.classList.remove('playing'); if (kawarp) kawarp.stop(); });
+  audio.addEventListener('play', () => { playBtn.classList.add('playing'); });
+  audio.addEventListener('pause', () => { playBtn.classList.remove('playing'); });
   volumeSlider.addEventListener('input', () => { audio.volume = parseFloat(volumeSlider.value); localStorage.setItem('radioking-volume', volumeSlider.value); });
 
   document.addEventListener('visibilitychange', () => {
@@ -352,25 +328,9 @@ function startApp(slug, streamUrl) {
     statusDot.title = 'Disconnected';
   });
 
-  /* ---- Kawarp ---- */
-  async function initKawarp() {
-    try {
-      const mod = await import('https://cdn.jsdelivr.net/npm/@kawarp/core/+esm');
-      kawarp = new mod.Kawarp(canvas, {
-        warpIntensity: 1.0, blurPasses: 8, animationSpeed: 1.0,
-        transitionDuration: 2000, saturation: 1.5,
-        tintColor: [0.0, 0.0, 0.0], tintIntensity: 1.0,
-      });
-      resizeCanvas();
-      kawarp.start();
-    } catch (_) { console.warn('kawarp', _); }
-  }
-  initKawarp();
-
   function setBackground(url) {
     if (!url) return;
     bgEl.style.background = `url("${url.replace(/"/g, '%22')}") center/cover no-repeat`;
-    if (kawarp) kawarp.loadImage(url);
   }
 
   /* ---- helpers ---- */

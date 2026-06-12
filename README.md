@@ -12,7 +12,7 @@ radioking/index.html ← standalone RadioKing player (GitHub Pages)
 
 ## Scripts
 
-- **radiochoco** — Enhanced player for Radio Choco with WebGL animated background (Kawarp), blown-up track info, and immersive fullscreen UI.
+- **radiochoco** — Enhanced player for Radio Choco with blown-up track info and immersive fullscreen UI.
 
 ## Standalone Player
 
@@ -40,7 +40,7 @@ radioking/index.html ← standalone RadioKing player (GitHub Pages)
 
 ### Features
 
-- Covers-based blurred background + Kawarp WebGL fluid animation
+- Covers-based blurred background
 - Track info (title, artist, album) via RadioKing API
 - Adaptive progress bar with elapsed / total time
 - "Up Next" display with hover history tooltip (last 10 played tracks)
