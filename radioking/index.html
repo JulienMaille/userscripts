@@ -255,18 +255,37 @@ function startApp(slug, streamUrl) {
     stationBtns.appendChild(btn);
   });
 
-  /* ---- theme toggle ---- */
-  themeBtn.addEventListener('click', () => {
-    isDark = !isDark;
-    document.documentElement.classList.toggle('light', !isDark);
-    localStorage.setItem('radioking-theme', isDark ? 'dark' : 'light');
+  /* ---- theme ---- */
+  let manualTheme = localStorage.getItem('radioking-theme'); // 'dark', 'light', or null
+
+  function applyTheme(dark) {
+    isDark = dark;
+    document.documentElement.classList.toggle('light', !dark);
     if (kawarp) {
-      if (isDark) {
-        kawarp.tintColor = [0.0, 0.0, 0.0];
-      } else {
-        kawarp.tintColor = [1.0, 1.0, 1.0];
-      }
+      kawarp.tintColor = dark ? [0.0, 0.0, 0.0] : [1.0, 1.0, 1.0];
     }
+  }
+
+  // Initialize from saved preference, or fall back to system
+  if (manualTheme) {
+    applyTheme(manualTheme === 'dark');
+  } else {
+    applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+
+  // Listen for system theme changes — only honor if no manual override
+  const systemThemeMq = window.matchMedia('(prefers-color-scheme: dark)');
+  systemThemeMq.addEventListener('change', (e) => {
+    if (!localStorage.getItem('radioking-theme')) {
+      applyTheme(e.matches);
+    }
+  });
+
+  themeBtn.addEventListener('click', () => {
+    const newDark = !isDark;
+    manualTheme = newDark ? 'dark' : 'light';
+    localStorage.setItem('radioking-theme', manualTheme);
+    applyTheme(newDark);
   });
 
   /* ---- history toggle ---- */
@@ -280,8 +299,6 @@ function startApp(slug, streamUrl) {
   /* ---- restore preferences ---- */
   const savedVol = localStorage.getItem('radioking-volume');
   if (savedVol !== null) { audio.volume = parseFloat(savedVol); volumeSlider.value = savedVol; }
-  const savedTheme = localStorage.getItem('radioking-theme');
-  if (savedTheme === 'light') { isDark = false; document.documentElement.classList.toggle('light', !isDark); }
   const savedDelta = localStorage.getItem(`radioking-delta-${slug}`);
   if (savedDelta !== null) { DELTASEC = Math.max(0, parseInt(savedDelta, 10)); }
   /* ---- end restore ---- */
