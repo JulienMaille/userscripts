@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Radioking Player</title>
 <style>
-:root{--card-bg:rgba(10,10,20,0.45);--text:#fff;--text-dim:rgba(255,255,255,0.5);--text-dimmer:rgba(255,255,255,0.3);--border:rgba(255,255,255,0.06);--btn-bg:rgba(255,255,255,0.06);--btn-hover:rgba(255,255,255,0.12);--btn-active-bg:#fff;--btn-active-text:#111;--prog-bg:rgba(255,255,255,0.1);--prog-fill:rgba(255,255,255,0.65);--shadow:0 8px 48px rgba(0,0,0,0.4);--bg-filter:blur(50px) brightness(0.3) saturate(1.4)}
-.light{--card-bg:rgba(255,255,255,0.55);--text:#111;--text-dim:rgb(0 0 0 / 75%);--text-dimmer:rgb(0 0 0 / 40%);--border:rgba(0,0,0,0.1);--btn-bg:rgba(0,0,0,0.04);--btn-hover:rgba(0,0,0,0.08);--btn-active-bg:#111;--btn-active-text:#fff;--prog-bg:rgba(0,0,0,0.08);--prog-fill:rgba(0,0,0,0.4);--shadow:0 8px 48px rgba(0,0,0,0.12);--bg-filter:blur(50px) brightness(0.7) saturate(0.8)}
+:root{--card-bg:rgba(10,10,20,0.45);--text:#fff;--text-dim:rgba(255,255,255,0.5);--text-dimmer:rgba(255,255,255,0.3);--border:rgba(255,255,255,0.06);--btn-bg:rgba(255,255,255,0.06);--btn-hover:rgba(255,255,255,0.12);--btn-active-bg:#fff;--btn-active-text:#111;--prog-bg:rgba(255,255,255,0.1);--prog-fill:rgba(255,255,255,0.65);--shadow:0 8px 48px rgba(0,0,0,0.4);--bg-filter:blur(50px) brightness(0.3) saturate(1.4);--cover-overlay:rgba(0,0,0,0.25)}
+.light{--card-bg:rgba(255,255,255,0.55);--text:#111;--text-dim:rgb(0 0 0 / 75%);--text-dimmer:rgb(0 0 0 / 40%);--border:rgba(0,0,0,0.1);--btn-bg:rgba(0,0,0,0.04);--btn-hover:rgba(0,0,0,0.08);--btn-active-bg:#111;--btn-active-text:#fff;--prog-bg:rgba(0,0,0,0.08);--prog-fill:rgba(0,0,0,0.4);--shadow:0 8px 48px rgba(0,0,0,0.12);--bg-filter:blur(50px) brightness(0.7) saturate(0.8);--cover-overlay:rgba(0,0,0,0)}
 
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden;background:#1a0f00;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;color:var(--text);transition:color .3s}
@@ -33,6 +33,7 @@ html,body{height:100%;overflow:hidden;background:#1a0f00;font-family:-apple-syst
 
 /* ---- cover ---- */
 #cover-wrap{position:relative;width:220px;height:220px;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.5);flex-shrink:0;transition:width .3s,height .3s}
+#cover-wrap::after{content:'';position:absolute;inset:0;border-radius:inherit;background:var(--cover-overlay);pointer-events:none;transition:background .3s}
 #cover{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .4s ease;opacity:0}
 
 /* ---- track info ---- */
@@ -179,6 +180,7 @@ html,body{height:100%;overflow:hidden;background:#1a0f00;font-family:-apple-syst
 
 <script type="module">
 let DELTASEC = 4;
+const DELTA_SAMPLES = [];
 const STATIONS = [
   { label: 'Radio Choco', slug: 'radiochoco-sound' },
   { label: 'Le Mellotron', slug: 'lemellotron-stream' },
@@ -417,17 +419,20 @@ function startApp(slug, streamUrl) {
           currentDeltaSec: DELTASEC
         });
         if (observedDelay >= 0 && observedDelay < 60) {
-          DELTASEC = Math.max(0, Math.round(observedDelay));
+          DELTA_SAMPLES.push(observedDelay);
+          if (DELTA_SAMPLES.length > 10) DELTA_SAMPLES.shift();
+          const sorted = [...DELTA_SAMPLES].sort((a, b) => a - b);
+          DELTASEC = Math.max(0, Math.round(sorted[Math.floor(sorted.length / 2)]));
           localStorage.setItem(`radioking-delta-${slug}`, DELTASEC);
           console.log('[Delta Calibrated New Value]', DELTASEC);
         }
       }
 
       /* ---- update timings ---- */
-      if (apiStartedAt) {
+      if (!isSameTrack && apiStartedAt) {
         prevStartedAt = apiStartedAt;
+        prevDuration = d.duration || 0;
       }
-      prevDuration = d.duration || 0;
 
       if (isSameTrack) return;
 
@@ -486,9 +491,9 @@ function startApp(slug, streamUrl) {
 
   function scheduleNext() {
     let delay = 8000;
-    if (prevStartedAt && prevDuration) {
-      const elapsed = (Date.now() - new Date(prevStartedAt).getTime()) / 1000 - DELTASEC;
-      if (elapsed >= prevDuration * 0.95) delay = 1000;
+    if (startedAt && trackDuration) {
+      const elapsed = (Date.now() - new Date(startedAt).getTime()) / 1000 - DELTASEC;
+      if (elapsed >= trackDuration * 0.95) delay = 1000;
     }
     setTimeout(() => { pollApi(); scheduleNext(); }, delay);
   }
